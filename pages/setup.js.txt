@@ -1,0 +1,54 @@
+import { useState } from "react";
+
+export default function SetupPage() {
+  const [links, setLinks] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function createGame() {
+    try {
+      setLoading(true);
+      setError("");
+      const res = await fetch("/api/new-game");
+      const data = await res.json();
+      const base =
+        typeof window !== "undefined" ? window.location.origin : "";
+      const playerLinks = data.players.map((p) => {
+        return `${base}/play?game=${data.gameId}&token=${p.token}`;
+      });
+      setLinks(playerLinks);
+    } catch (e) {
+      setError("게임 생성 중 오류가 났어요.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ padding: 24, fontFamily: "sans-serif" }}>
+      <h1>브랜드 스파이폴 – 방 만들기</h1>
+      <p>버튼 누르면 4명 초대 링크가 생깁니다.</p>
+      <button onClick={createGame} disabled={loading}>
+        {loading ? "생성 중..." : "새 게임 만들기"}
+      </button>
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      {links && (
+        <div style={{ marginTop: 24 }}>
+          <h2>초대 링크</h2>
+          <ol>
+            {links.map((link, i) => (
+              <li key={i}>
+                <a href={link} target="_blank" rel="noreferrer">
+                  {link}
+                </a>
+              </li>
+            ))}
+          </ol>
+          <p>링크를 팀원한테 하나씩 보내면 됩니다.</p>
+        </div>
+      )}
+    </div>
+  );
+}
